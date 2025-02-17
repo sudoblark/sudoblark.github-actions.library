@@ -38,13 +38,18 @@
 <!-- ABOUT THE PROJECT -->
 ## About The Project
 
-This repo contains a setup of re-usable GitHub Actions [workflows](https://docs.github.com/en/actions/sharing-automations/reusing-workflows).
+This repo contains a setup of re-usable GitHub composition [actions](https://docs.github.com/en/actions/sharing-automations/creating-actions/creating-a-composite-action).
 
-Specifically it is a library of semantically versioned](https://semver.org) components, intended to be used as off-the-shelf, standardised,
+Specifically it is a library of semantically versioned](https://semver.org) actions, intended to be used as off-the-shelf, standardised,
 building blocks for CI/CD processes involving GitHub Actions.
 
 It fulfills the same function that [sudoblark.azure-devops.library](https://github.com/sudoblark/sudoblark.azure-devops.library)
 does for Azure DevOps Pipelines.
+
+In the instance that several of these composite actions, when combined, fulfill a use-case this is either done via:
+
+- Direct instantation in a caller repo
+- As a re-usable workflow via [sudoblark.github-actions.workflows](https://github.com/sudoblark/sudoblark.github-actions.workflows)
 
 <p align="right">(<a href="#readme-top">back to top</a>)</p>
 
@@ -60,22 +65,25 @@ does for Azure DevOps Pipelines.
 <!-- GETTING STARTED -->
 ## Getting Started
 
-Creating new re-usable workflows it as simple as writing a YAML file. However, it's important to keep
+Creating new re-usable composite actions it as simple as writing a YAML file. However, it's important to keep
 a few things in mind:
 - YAML files should denote _what_ the task does simply and plainly
 - The folder structure should denote what the task interacts with
-- Re-usable workflows require the following `on` value at minimum:
-
-```yaml
-on:
-  workflow_call:
-```
-
-- Workflows should be generalised, re-usable, and with a well-defined interface. Generally this means:
+- Composite actions should be generalised, re-usable, and with a well-defined interface. Generally this means:
   - Think about how the action(s) you're defining may be used in more than just the specific use-case you're trying to fulfill
   - Avoid hard-coding, use inputs where possible.
-  - Document your inputs, make them discere where possible
+  - Document your inputs, make them discere where possible via `options`
   - Document your outputs
+
+A simple truism is thus:
+
+_If I can't tell what the composite action does via its documented inputs and outputs, you haven't
+documented it well enough_
+
+The beauty of such a core library - like any other software - is that if we maintain the same interface, we are free
+to chop and change the underlying implementation(s) as we wish. Whilst maintaining all
+the other benefits of a [component-based architecture](https://www.mendix.com/blog/what-is-component-based-architecture/).
+
 
 <p align="right">(<a href="#readme-top">back to top</a>)</p>
 
@@ -84,20 +92,53 @@ on:
 
 In order to use a task within a pipeline, simply:
 
-- Identify the job(s) you wish to reference
+- Identify the actions(s) you wish to reference
 - Identify their interface
-  - i.e. what are the inputs
-- Call that job(s) in your own pipeline, for example:
+  - i.e. what are the inputs and outputs
+- Figure out how this interacts with your intended use-case
+- Call those action(s) in your own pipeline, for example:
 
 ```yaml
+on: [pull_request]
+
 jobs:
-  TerraformPlan:
+  terraform_quality_checks:
+    runs-on: ubuntu-latest
+    name: A simple job to validate that pushed terraform is valid for all environment in the repo
     strategy:
       matrix:
-        target: [dev, stage, prod]
-    uses: sudoblark/sudoblark.github-actions.library/terraform/plan.yml@1.0.0
-    with:
-      target: ${{ matrix.target }}
+        ENVIRONMENTS: [
+          {
+            terraform_version: 1.5.1,
+            folder: dev,
+            prefix: dev,
+            aws_region: eu-west-2
+          },
+          {
+            terraform_version: 1.8.1,
+            folder: test,
+            prefix: test,
+            aws_region: eu-west-1
+          }
+          {
+            terraform_version: 1.10.1,
+            folder: prod,
+            prefix: prod,
+            aws_region: us-east-1
+          }
+        
+        ]
+    steps:
+      - uses: actions/checkout@v4
+      - uses: sudoblark/sudoblark.github-actions.library/terraform/plan@1.0.0
+        with:
+          terraform_version: ${{ matrix.ENVIRONMENTS.terraform_version }}
+          working_directory: infrastructure/${{ matrix.ENVIRONMENTS.folder }}
+          artefact_prefix: ${{ matrix.ENVIRONMENTS.prefix }}
+          aws_region: ${{ matrix.ENVIRONMENTS.aws_region }}
+          ## Assumed singular IAM role that can assume roles in other accounts
+          aws_access_key: ${{ secrets.ACCESS_KEY_ID }}
+          aws_secret_access_key: ${{ secrets.ACCESS_KEY_VALUE }}
 ```
 
 <p align="right">(<a href="#readme-top">back to top</a>)</p>

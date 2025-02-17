@@ -1,0 +1,149 @@
+name: "sudoblark.github-actions.library/terraform/plan"
+description: """
+Run quality checks against terraform, in addition to outputting a plan, with results outputted
+to a pipeline artefact ZIP file with the name {{ inputs.prefix }}-terraform-artefact, contents
+of which are as follows:
+
+- terraform.plan        : Binary terraform plan
+- terraform.validate    : Results of terraform validation
+- terraform.show        : Terraform plan in human-readable format
+- terraform.json        : Terraform plan in JSON format, required for some downstream CLI tooling
+- terraform.format      : List of files which have failed terraform format checks, else an empty file
+- checkov.xml           : JUnit output of Checkov results, can be used to upload test results downstream
+"""
+author: "sudoblark"
+inputs:
+  terraform_version:
+    description: "Semantic version of Terraform to utilise for the task."
+    type: string
+    required: true
+  working_directory:
+    description: "The working directory to utilise when performing the task."
+    type: string
+    required: true
+  artefact_prefix:
+    description: "Prefix to append to terraform-artefact produced by the task."
+    type: string
+    required: true
+  aws_region:
+    description: "AWS_DEFAULT_REGION value, required if the hashicorp/aws provider is utilised."
+    type: string
+    default: ""
+    required: false
+  aws_access_key:
+    description: "AWS_ACCESS_KEY_ID value, required if the hashicorp/aws provider is utilised."
+    type: string
+    default: ""
+    required: false
+  aws_secret_access_key:
+    description: "AWS_SECRET_ACCESS_KEY value, required if the hashicorp/aws provider is utilised."
+    type: string
+    default: ""
+    required: false
+outputs:
+  artefact_name:
+    description: "Name of artefact ZIP file with outputted results."
+    type: string
+    value: "{{ inputs.prefix }}-terraform-artefact"
+
+jobs:
+  terraform-quality-checks-and-plan:
+    steps:
+
+      - name: "Pull Hashicorp container"
+        run: |
+          docker pull hashicorp/terraform:${{ inputs.terraform_version }}
+
+      - name: "Terraform init"
+        run: |
+          docker run \
+          -v $GITHUB_WORKSPACE:$GITHUB_WORKSPACE \
+          -w ${{ inputs.working_directory }}
+          -e AWS_ACCESS_KEY_ID=${{ inputs.aws_access_key }} \
+          -e AWS_SECRET_ACCESS_KEY=${{ inputs.aws_secret_access_key }} \
+          -e AWS_DEFAULT_REGION=${{ inputs.aws_region }} \
+          hashicorp/terraform:${{ inputs.terraform_version }} \
+          init
+
+      - name: "Terraform validate"
+        run: |
+          docker run \
+          -v $GITHUB_WORKSPACE:$GITHUB_WORKSPACE \
+          -w ${{ inputs.working_directory }}
+          -e AWS_ACCESS_KEY_ID=${{ inputs.aws_access_key }} \
+          -e AWS_SECRET_ACCESS_KEY=${{ inputs.aws_secret_access_key }} \
+          -e AWS_DEFAULT_REGION=${{ inputs.aws_region }} \
+          hashicorp/terraform:${{ inputs.terraform_version }} \
+          validate -no-color > terraform.validate
+
+      - name: "Terraform formatter check"
+        run: |
+          docker run \
+          -v $GITHUB_WORKSPACE:$GITHUB_WORKSPACE \
+          -w ${{ inputs.working_directory }}
+          -e AWS_ACCESS_KEY_ID=${{ inputs.aws_access_key }} \
+          -e AWS_SECRET_ACCESS_KEY=${{ inputs.aws_secret_access_key }} \
+          -e AWS_DEFAULT_REGION=${{ inputs.aws_region }} \
+          hashicorp/terraform:${{ inputs.terraform_version }} \
+          fmt -check -no-color > terraform.format 
+
+      - name: "Terraform plan"
+        run: |
+          docker run \
+          -v $GITHUB_WORKSPACE:$GITHUB_WORKSPACE \
+          -w ${{ inputs.working_directory }}
+          -e AWS_ACCESS_KEY_ID=${{ inputs.aws_access_key }} \
+          -e AWS_SECRET_ACCESS_KEY=${{ inputs.aws_secret_access_key }} \
+          -e AWS_DEFAULT_REGION=${{ inputs.aws_region }} \
+          hashicorp/terraform:${{ inputs.terraform_version }} \
+          plan -no-color -out=terraform.plan
+
+      - name: "Terraform show for humans"
+        run: |
+          docker run \
+          -v $GITHUB_WORKSPACE:$GITHUB_WORKSPACE \
+          -w ${{ inputs.working_directory }}
+          -e AWS_ACCESS_KEY_ID=${{ inputs.aws_access_key }} \
+          -e AWS_SECRET_ACCESS_KEY=${{ inputs.aws_secret_access_key }} \
+          -e AWS_DEFAULT_REGION=${{ inputs.aws_region }} \
+          hashicorp/terraform:${{ inputs.terraform_version }} \
+          show -no-color terraform.plan > terraform.show
+
+      - name: "Terraform show for tooling"
+        run: |
+          docker run \
+          -v $GITHUB_WORKSPACE:$GITHUB_WORKSPACE \
+          -w ${{ inputs.working_directory }}
+          -e AWS_ACCESS_KEY_ID=${{ inputs.aws_access_key }} \
+          -e AWS_SECRET_ACCESS_KEY=${{ inputs.aws_secret_access_key }} \
+          -e AWS_DEFAULT_REGION=${{ inputs.aws_region }} \
+          hashicorp/terraform:${{ inputs.terraform_version }} \
+          show -no-color -json terraform.plan > terraform.json-raw
+
+      - name: "Format JSON output"
+        run: |
+          sed -i $'s/[^[:print:]\t]//g' ${{ inputs.working_directory }}/terraform.json-raw
+          cat ${{ inputs.working_directory }}/terraform.json-raw | jq > ${{ inputs.working_directory }}/terraform.json
+
+      - name: "Run checkov"
+        run: |
+          python3 -m venv checkov_venv
+          source checkov_venv/bin/activate
+          pip3 install checkov
+          checkov -f ${{ parameters.tfWorkDir }}/terraform.json \
+          --repo-root-for-plan-enrichment ${{ inputs.working_directory }} \
+          --download-external-modules True \
+          -o junitxml > checkov.xml \
+          --soft-fail
+
+      - name: "Package results"
+        run: |
+          tar czvpf \
+            results.tar.gz \
+            -C ${{ inputs.working_directory }} \
+            terraform.plan terraform.validate terraform.show terraform.json terraform.format checkov.xml
+
+      - uses: actions/upload-artifact@v4
+        with:
+          name: "{{ inputs.prefix }}-terraform-artefact"
+          path: ${{ inputs.working_directory }}/results.tar.gz
