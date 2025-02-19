@@ -1,0 +1,161 @@
+name: "sudoblark.github-actions.library/terraform/plan"
+description: >-
+  Run quality checks against terraform, in addition to outputting a plan, with results outputted
+  to a pipeline artefact ZIP file with the name {{ inputs.prefix }}-terraform-artefact, contents
+  of which are as follows:
+  
+  - terraform.plan        : Binary terraform plan
+  - terraform.validate    : Results of terraform validation
+  - terraform.show        : Terraform plan in human-readable format
+  - terraform.json        : Terraform plan in JSON format, required for some downstream CLI tooling
+  - terraform.format      : List of files which have failed terraform format checks, else an empty file
+  - checkov.xml           : JUnit output of Checkov results, can be used to upload test results downstream
+author: "sudoblark"
+inputs:
+  terraform_version:
+    description: "Semantic version of Terraform to utilise for the task."
+    type: string
+    required: true
+  working_directory:
+    description: "The working directory to utilise when performing the task."
+    type: string
+    required: true
+  artefact_prefix:
+    description: "Prefix to append to terraform-artefact produced by the task."
+    type: string
+    required: true
+  aws_region:
+    description: "AWS_DEFAULT_REGION value, required if the hashicorp/aws provider is utilised."
+    type: string
+    default: ""
+    required: false
+  aws_access_key:
+    description: "AWS_ACCESS_KEY_ID value, required if the hashicorp/aws provider is utilised."
+    type: string
+    default: ""
+    required: false
+  aws_secret_access_key:
+    description: "AWS_SECRET_ACCESS_KEY value, required if the hashicorp/aws provider is utilised."
+    type: string
+    default: ""
+    required: false
+outputs:
+  artefact_name:
+    description: "Name of artefact ZIP file with outputted results."
+    value: "{{ inputs.prefix }}-terraform-artefact"
+
+runs:
+  using: "composite"
+  steps:
+    - name: "Pull Hashicorp container"
+      run: |
+        docker pull hashicorp/terraform:${{ inputs.terraform_version }}
+      shell: bash
+
+    - name: "Terraform init"
+      run: |
+        docker run \
+        -v $GITHUB_WORKSPACE:$GITHUB_WORKSPACE \
+        -w ${{ inputs.working_directory }} \
+        -e AWS_ACCESS_KEY_ID=${{ inputs.aws_access_key }} \
+        -e AWS_SECRET_ACCESS_KEY=${{ inputs.aws_secret_access_key }} \
+        -e AWS_DEFAULT_REGION=${{ inputs.aws_region }} \
+        hashicorp/terraform:${{ inputs.terraform_version }} \
+        init
+      shell: bash
+
+    - name: "Terraform validate"
+      run: |
+        docker run \
+        -v $GITHUB_WORKSPACE:$GITHUB_WORKSPACE \
+        -w ${{ inputs.working_directory }} \
+        -e AWS_ACCESS_KEY_ID=${{ inputs.aws_access_key }} \
+        -e AWS_SECRET_ACCESS_KEY=${{ inputs.aws_secret_access_key }} \
+        -e AWS_DEFAULT_REGION=${{ inputs.aws_region }} \
+        hashicorp/terraform:${{ inputs.terraform_version }} \
+        validate -no-color > ${{ inputs.working_directory }}/terraform.validate
+      shell: bash
+
+    - name: "Terraform formatter check"
+      run: |
+        docker run \
+        -v $GITHUB_WORKSPACE:$GITHUB_WORKSPACE \
+        -w ${{ inputs.working_directory }} \
+        -e AWS_ACCESS_KEY_ID=${{ inputs.aws_access_key }} \
+        -e AWS_SECRET_ACCESS_KEY=${{ inputs.aws_secret_access_key }} \
+        -e AWS_DEFAULT_REGION=${{ inputs.aws_region }} \
+        hashicorp/terraform:${{ inputs.terraform_version }} \
+        fmt -check -no-color > ${{ inputs.working_directory }}/terraform.format
+      shell: bash
+
+    - name: "Terraform plan"
+      run: |
+        docker run \
+        -v $GITHUB_WORKSPACE:$GITHUB_WORKSPACE \
+        -w ${{ inputs.working_directory }} \
+        -e AWS_ACCESS_KEY_ID=${{ inputs.aws_access_key }} \
+        -e AWS_SECRET_ACCESS_KEY=${{ inputs.aws_secret_access_key }} \
+        -e AWS_DEFAULT_REGION=${{ inputs.aws_region }} \
+        hashicorp/terraform:${{ inputs.terraform_version }} \
+        plan -no-color -out=${{ inputs.working_directory }}/terraform.plan
+      shell: bash
+
+    - name: "Terraform show for humans"
+      run: |
+        docker run \
+        -v $GITHUB_WORKSPACE:$GITHUB_WORKSPACE \
+        -w ${{ inputs.working_directory }} \
+        -e AWS_ACCESS_KEY_ID=${{ inputs.aws_access_key }} \
+        -e AWS_SECRET_ACCESS_KEY=${{ inputs.aws_secret_access_key }} \
+        -e AWS_DEFAULT_REGION=${{ inputs.aws_region }} \
+        hashicorp/terraform:${{ inputs.terraform_version }} \
+        show -no-color terraform.plan > ${{ inputs.working_directory }}/terraform.show
+      shell: bash
+
+    - name: "Terraform show for tooling"
+      run: |
+        docker run \
+        -v $GITHUB_WORKSPACE:$GITHUB_WORKSPACE \
+        -w ${{ inputs.working_directory }} \
+        -e AWS_ACCESS_KEY_ID=${{ inputs.aws_access_key }} \
+        -e AWS_SECRET_ACCESS_KEY=${{ inputs.aws_secret_access_key }} \
+        -e AWS_DEFAULT_REGION=${{ inputs.aws_region }} \
+        hashicorp/terraform:${{ inputs.terraform_version }} \
+        show -no-color -json terraform.plan > ${{ inputs.working_directory }}/terraform.json-raw
+      shell: bash
+
+    - name: "Format JSON output"
+      run: |
+        sed -i $'s/[^[:print:]\t]//g' ${{ inputs.working_directory }}/terraform.json-raw
+        cat ${{ inputs.working_directory }}/terraform.json-raw | jq > ${{ inputs.working_directory }}/terraform.json
+      shell: bash
+
+    - name: "Run checkov"
+      run: |
+        python3 -m venv checkov_venv
+        source checkov_venv/bin/activate
+        pip3 install checkov
+        checkov -f ${{ inputs.working_directory }}/terraform.json \
+        --repo-root-for-plan-enrichment ${{ inputs.working_directory }} \
+        --download-external-modules True \
+        -o junitxml > ${{ inputs.working_directory }}/checkov.xml \
+        --soft-fail
+      shell: bash
+
+
+    - name: "Package results"
+      run: |
+        cd ${{ inputs.working_directory }}
+        tar -czvpf results.tar.gz terraform.plan terraform.validate terraform.show terraform.json terraform.format checkov.xml
+        pwd
+        ls -lr
+        mv results.tar.gz $GITHUB_WORKSPACE
+        cd $GITHUB_WORKSPACE
+        pwd
+        ls -lr
+      shell: bash
+
+    - uses: actions/upload-artifact@v4
+      with:
+        name: "${{ inputs.artefact_prefix }}-terraform-artefact"
+        path: results.tar.gz
