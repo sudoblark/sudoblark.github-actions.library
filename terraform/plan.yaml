@@ -46,103 +46,103 @@ outputs:
     type: string
     value: "{{ inputs.prefix }}-terraform-artefact"
 
-jobs:
-  terraform-quality-checks-and-plan:
-    steps:
-      - name: "Pull Hashicorp container"
-        run: |
-          docker pull hashicorp/terraform:${{ inputs.terraform_version }}
+runs:
+  using: "composite"
+  steps:
+    - name: "Pull Hashicorp container"
+      run: |
+        docker pull hashicorp/terraform:${{ inputs.terraform_version }}
 
-      - name: "Terraform init"
-        run: |
-          docker run \
-          -v $GITHUB_WORKSPACE:$GITHUB_WORKSPACE \
-          -w ${{ inputs.working_directory }}
-          -e AWS_ACCESS_KEY_ID=${{ inputs.aws_access_key }} \
-          -e AWS_SECRET_ACCESS_KEY=${{ inputs.aws_secret_access_key }} \
-          -e AWS_DEFAULT_REGION=${{ inputs.aws_region }} \
-          hashicorp/terraform:${{ inputs.terraform_version }} \
-          init
+    - name: "Terraform init"
+      run: |
+        docker run \
+        -v $GITHUB_WORKSPACE:$GITHUB_WORKSPACE \
+        -w ${{ inputs.working_directory }}
+        -e AWS_ACCESS_KEY_ID=${{ inputs.aws_access_key }} \
+        -e AWS_SECRET_ACCESS_KEY=${{ inputs.aws_secret_access_key }} \
+        -e AWS_DEFAULT_REGION=${{ inputs.aws_region }} \
+        hashicorp/terraform:${{ inputs.terraform_version }} \
+        init
 
-      - name: "Terraform validate"
-        run: |
-          docker run \
-          -v $GITHUB_WORKSPACE:$GITHUB_WORKSPACE \
-          -w ${{ inputs.working_directory }}
-          -e AWS_ACCESS_KEY_ID=${{ inputs.aws_access_key }} \
-          -e AWS_SECRET_ACCESS_KEY=${{ inputs.aws_secret_access_key }} \
-          -e AWS_DEFAULT_REGION=${{ inputs.aws_region }} \
-          hashicorp/terraform:${{ inputs.terraform_version }} \
-          validate -no-color > terraform.validate
+    - name: "Terraform validate"
+      run: |
+        docker run \
+        -v $GITHUB_WORKSPACE:$GITHUB_WORKSPACE \
+        -w ${{ inputs.working_directory }}
+        -e AWS_ACCESS_KEY_ID=${{ inputs.aws_access_key }} \
+        -e AWS_SECRET_ACCESS_KEY=${{ inputs.aws_secret_access_key }} \
+        -e AWS_DEFAULT_REGION=${{ inputs.aws_region }} \
+        hashicorp/terraform:${{ inputs.terraform_version }} \
+        validate -no-color > terraform.validate
 
-      - name: "Terraform formatter check"
-        run: |
-          docker run \
-          -v $GITHUB_WORKSPACE:$GITHUB_WORKSPACE \
-          -w ${{ inputs.working_directory }}
-          -e AWS_ACCESS_KEY_ID=${{ inputs.aws_access_key }} \
-          -e AWS_SECRET_ACCESS_KEY=${{ inputs.aws_secret_access_key }} \
-          -e AWS_DEFAULT_REGION=${{ inputs.aws_region }} \
-          hashicorp/terraform:${{ inputs.terraform_version }} \
-          fmt -check -no-color > terraform.format 
+    - name: "Terraform formatter check"
+      run: |
+        docker run \
+        -v $GITHUB_WORKSPACE:$GITHUB_WORKSPACE \
+        -w ${{ inputs.working_directory }}
+        -e AWS_ACCESS_KEY_ID=${{ inputs.aws_access_key }} \
+        -e AWS_SECRET_ACCESS_KEY=${{ inputs.aws_secret_access_key }} \
+        -e AWS_DEFAULT_REGION=${{ inputs.aws_region }} \
+        hashicorp/terraform:${{ inputs.terraform_version }} \
+        fmt -check -no-color > terraform.format 
 
-      - name: "Terraform plan"
-        run: |
-          docker run \
-          -v $GITHUB_WORKSPACE:$GITHUB_WORKSPACE \
-          -w ${{ inputs.working_directory }}
-          -e AWS_ACCESS_KEY_ID=${{ inputs.aws_access_key }} \
-          -e AWS_SECRET_ACCESS_KEY=${{ inputs.aws_secret_access_key }} \
-          -e AWS_DEFAULT_REGION=${{ inputs.aws_region }} \
-          hashicorp/terraform:${{ inputs.terraform_version }} \
-          plan -no-color -out=terraform.plan
+    - name: "Terraform plan"
+      run: |
+        docker run \
+        -v $GITHUB_WORKSPACE:$GITHUB_WORKSPACE \
+        -w ${{ inputs.working_directory }}
+        -e AWS_ACCESS_KEY_ID=${{ inputs.aws_access_key }} \
+        -e AWS_SECRET_ACCESS_KEY=${{ inputs.aws_secret_access_key }} \
+        -e AWS_DEFAULT_REGION=${{ inputs.aws_region }} \
+        hashicorp/terraform:${{ inputs.terraform_version }} \
+        plan -no-color -out=terraform.plan
 
-      - name: "Terraform show for humans"
-        run: |
-          docker run \
-          -v $GITHUB_WORKSPACE:$GITHUB_WORKSPACE \
-          -w ${{ inputs.working_directory }}
-          -e AWS_ACCESS_KEY_ID=${{ inputs.aws_access_key }} \
-          -e AWS_SECRET_ACCESS_KEY=${{ inputs.aws_secret_access_key }} \
-          -e AWS_DEFAULT_REGION=${{ inputs.aws_region }} \
-          hashicorp/terraform:${{ inputs.terraform_version }} \
-          show -no-color terraform.plan > terraform.show
+    - name: "Terraform show for humans"
+      run: |
+        docker run \
+        -v $GITHUB_WORKSPACE:$GITHUB_WORKSPACE \
+        -w ${{ inputs.working_directory }}
+        -e AWS_ACCESS_KEY_ID=${{ inputs.aws_access_key }} \
+        -e AWS_SECRET_ACCESS_KEY=${{ inputs.aws_secret_access_key }} \
+        -e AWS_DEFAULT_REGION=${{ inputs.aws_region }} \
+        hashicorp/terraform:${{ inputs.terraform_version }} \
+        show -no-color terraform.plan > terraform.show
 
-      - name: "Terraform show for tooling"
-        run: |
-          docker run \
-          -v $GITHUB_WORKSPACE:$GITHUB_WORKSPACE \
-          -w ${{ inputs.working_directory }}
-          -e AWS_ACCESS_KEY_ID=${{ inputs.aws_access_key }} \
-          -e AWS_SECRET_ACCESS_KEY=${{ inputs.aws_secret_access_key }} \
-          -e AWS_DEFAULT_REGION=${{ inputs.aws_region }} \
-          hashicorp/terraform:${{ inputs.terraform_version }} \
-          show -no-color -json terraform.plan > terraform.json-raw
+    - name: "Terraform show for tooling"
+      run: |
+        docker run \
+        -v $GITHUB_WORKSPACE:$GITHUB_WORKSPACE \
+        -w ${{ inputs.working_directory }}
+        -e AWS_ACCESS_KEY_ID=${{ inputs.aws_access_key }} \
+        -e AWS_SECRET_ACCESS_KEY=${{ inputs.aws_secret_access_key }} \
+        -e AWS_DEFAULT_REGION=${{ inputs.aws_region }} \
+        hashicorp/terraform:${{ inputs.terraform_version }} \
+        show -no-color -json terraform.plan > terraform.json-raw
 
-      - name: "Format JSON output"
-        run: |
-          sed -i $'s/[^[:print:]\t]//g' ${{ inputs.working_directory }}/terraform.json-raw
-          cat ${{ inputs.working_directory }}/terraform.json-raw | jq > ${{ inputs.working_directory }}/terraform.json
+    - name: "Format JSON output"
+      run: |
+        sed -i $'s/[^[:print:]\t]//g' ${{ inputs.working_directory }}/terraform.json-raw
+        cat ${{ inputs.working_directory }}/terraform.json-raw | jq > ${{ inputs.working_directory }}/terraform.json
 
-      - name: "Run checkov"
-        run: |
-          python3 -m venv checkov_venv
-          source checkov_venv/bin/activate
-          pip3 install checkov
-          checkov -f ${{ parameters.tfWorkDir }}/terraform.json \
-          --repo-root-for-plan-enrichment ${{ inputs.working_directory }} \
-          --download-external-modules True \
-          -o junitxml > checkov.xml \
-          --soft-fail
+    - name: "Run checkov"
+      run: |
+        python3 -m venv checkov_venv
+        source checkov_venv/bin/activate
+        pip3 install checkov
+        checkov -f ${{ parameters.tfWorkDir }}/terraform.json \
+        --repo-root-for-plan-enrichment ${{ inputs.working_directory }} \
+        --download-external-modules True \
+        -o junitxml > checkov.xml \
+        --soft-fail
 
-      - name: "Package results"
-        run: |
-          tar czvpf \
-            results.tar.gz \
-            -C ${{ inputs.working_directory }} \
-            terraform.plan terraform.validate terraform.show terraform.json terraform.format checkov.xml
+    - name: "Package results"
+      run: |
+        tar czvpf \
+          results.tar.gz \
+          -C ${{ inputs.working_directory }} \
+          terraform.plan terraform.validate terraform.show terraform.json terraform.format checkov.xml
 
-      - uses: actions/upload-artifact@v4
-        with:
-          name: "{{ inputs.prefix }}-terraform-artefact"
-          path: ${{ inputs.working_directory }}/results.tar.gz
+    - uses: actions/upload-artifact@v4
+      with:
+        name: "{{ inputs.prefix }}-terraform-artefact"
+        path: ${{ inputs.working_directory }}/results.tar.gz
