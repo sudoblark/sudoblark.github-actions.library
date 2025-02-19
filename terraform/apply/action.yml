@@ -61,8 +61,7 @@ runs:
     - name: "Restore artefact"
       run: |
         cd ${{ inputs.working_directory }}
-        tar -xvpzf ${{ inputs.working_directory }}/results.tar.gz --same-owner
-        ls -alh ${{ inputs.working_directory }}
+        ls -lr
       shell: bash
 
     - name: "Terraform apply"
