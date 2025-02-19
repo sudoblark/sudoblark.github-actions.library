@@ -56,11 +56,11 @@ runs:
     - uses: actions/download-artifact@v4
       with:
         name: ${{ inputs.artefact }}
-        path: ${{ inputs.working_directory }}/results.tar.gz
 
     - name: "Restore artefact"
       run: |
         cd ${{ inputs.working_directory }}
+        mv $GITHUB_WORKSPACE/results.tar.gz ./
         ls -lr
       shell: bash
 
