@@ -173,5 +173,6 @@ Distributed under the project_license. See `LICENSE.txt` for more information.
 ## Acknowledgments
 
 * [Othneil Drew](https://github.com/othneildrew) for their amazing [Best README template](https://github.com/othneildrew/Best-README-Template) that was shameless used for this repo
+* [codeql-action](https://github.com/github/codeql-action) for a robust example of multiple actions in one repository, something that is lacking from the official [docs](https://docs.github.com/en/actions/sharing-automations/creating-actions/creating-a-composite-action).
 
 <p align="right">(<a href="#readme-top">back to top</a>)</p>
