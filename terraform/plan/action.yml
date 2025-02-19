@@ -144,6 +144,7 @@ runs:
 
     - name: "Package results"
       run: |
+        cd ${{ inputs.working_directory }}
         tar czvpf \
           results.tar.gz \
           -C ${{ inputs.working_directory }} \
