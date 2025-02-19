@@ -73,7 +73,7 @@ runs:
         -e AWS_SECRET_ACCESS_KEY=${{ inputs.aws_secret_access_key }} \
         -e AWS_DEFAULT_REGION=${{ inputs.aws_region }} \
         hashicorp/terraform:${{ inputs.terraform_version }} \
-        validate -no-color > terraform.validate
+        validate -no-color > ${{ inputs.working_directory }}/terraform.validate
       shell: bash
 
     - name: "Terraform formatter check"
@@ -85,7 +85,7 @@ runs:
         -e AWS_SECRET_ACCESS_KEY=${{ inputs.aws_secret_access_key }} \
         -e AWS_DEFAULT_REGION=${{ inputs.aws_region }} \
         hashicorp/terraform:${{ inputs.terraform_version }} \
-        fmt -check -no-color > terraform.format
+        fmt -check -no-color > ${{ inputs.working_directory }}/terraform.format
       shell: bash
 
     - name: "Terraform plan"
@@ -97,7 +97,7 @@ runs:
         -e AWS_SECRET_ACCESS_KEY=${{ inputs.aws_secret_access_key }} \
         -e AWS_DEFAULT_REGION=${{ inputs.aws_region }} \
         hashicorp/terraform:${{ inputs.terraform_version }} \
-        plan -no-color -out=terraform.plan
+        plan -no-color -out=${{ inputs.working_directory }}/terraform.plan
       shell: bash
 
     - name: "Terraform show for humans"
@@ -109,7 +109,7 @@ runs:
         -e AWS_SECRET_ACCESS_KEY=${{ inputs.aws_secret_access_key }} \
         -e AWS_DEFAULT_REGION=${{ inputs.aws_region }} \
         hashicorp/terraform:${{ inputs.terraform_version }} \
-        show -no-color terraform.plan > terraform.show
+        show -no-color terraform.plan > ${{ inputs.working_directory }}/terraform.show
       shell: bash
 
     - name: "Terraform show for tooling"
@@ -121,7 +121,7 @@ runs:
         -e AWS_SECRET_ACCESS_KEY=${{ inputs.aws_secret_access_key }} \
         -e AWS_DEFAULT_REGION=${{ inputs.aws_region }} \
         hashicorp/terraform:${{ inputs.terraform_version }} \
-        show -no-color -json terraform.plan > terraform.json-raw
+        show -no-color -json terraform.plan > ${{ inputs.working_directory }}/terraform.json-raw
       shell: bash
 
     - name: "Format JSON output"
