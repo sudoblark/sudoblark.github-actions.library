@@ -61,7 +61,7 @@ runs:
       run: |
         cd ${{ inputs.working_directory }}
         mv $GITHUB_WORKSPACE/results.tar.gz ./
-        tar -xvpzf results.tar.gz --same-owner
+        sudo tar -xvpzf results.tar.gz --same-owner
         ls -lr
       shell: bash
 
