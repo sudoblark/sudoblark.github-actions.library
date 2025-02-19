@@ -50,7 +50,7 @@ runs:
       run: |
         docker run \
         -v $GITHUB_WORKSPACE:$GITHUB_WORKSPACE \
-        -w ${{ inputs.working_directory }}
+        -w $GITHUB_WORKSPACE/${{ inputs.working_directory }}
         -e AWS_ACCESS_KEY_ID=${{ inputs.aws_access_key }} \
         -e AWS_SECRET_ACCESS_KEY=${{ inputs.aws_secret_access_key }} \
         -e AWS_DEFAULT_REGION=${{ inputs.aws_region }} \
@@ -74,7 +74,7 @@ runs:
       run: |
         docker run \
         -v $GITHUB_WORKSPACE:$GITHUB_WORKSPACE \
-        -w ${{ inputs.working_directory }}
+        -w $GITHUB_WORKSPACE/${{ inputs.working_directory }}
         -e AWS_ACCESS_KEY_ID=${{ inputs.aws_access_key }} \
         -e AWS_SECRET_ACCESS_KEY=${{ inputs.aws_secret_access_key }} \
         -e AWS_DEFAULT_REGION=${{ inputs.aws_region }} \
