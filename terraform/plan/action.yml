@@ -138,7 +138,7 @@ runs:
         checkov -f ${{ inputs.working_directory }}/terraform.json \
         --repo-root-for-plan-enrichment ${{ inputs.working_directory }} \
         --download-external-modules True \
-        -o junitxml > checkov.xml \
+        -o junitxml > ${{ inputs.working_directory }}/checkov.xml \
         --soft-fail
       shell: bash
 
