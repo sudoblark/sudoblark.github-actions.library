@@ -32,11 +32,6 @@ inputs:
     type: string
     default: ""
     required: false
-outputs:
-  artefact_name:
-    description: "Name of artefact ZIP file with outputted results."
-    type: string
-    value: "{{ inputs.prefix }}-terraform-artefact"
 
 runs:
   using: "composite"
@@ -64,8 +59,8 @@ runs:
         path: ${{ inputs.working_directory }}/results.tar.gz
 
     - name: "Restore artefact"
-      working-directory: ${{ inputs.working_directory }}
       run: |
+        cd ${{ inputs.working_directory }}
         tar -xvpzf ${{ inputs.working_directory }}/results.tar.gz --same-owner
         ls -alh ${{ inputs.working_directory }}
       shell: bash
