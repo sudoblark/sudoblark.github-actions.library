@@ -1,16 +1,15 @@
 name: "sudoblark.github-actions.library/terraform/plan"
-description: """
-Run quality checks against terraform, in addition to outputting a plan, with results outputted
-to a pipeline artefact ZIP file with the name {{ inputs.prefix }}-terraform-artefact, contents
-of which are as follows:
-
-- terraform.plan        : Binary terraform plan
-- terraform.validate    : Results of terraform validation
-- terraform.show        : Terraform plan in human-readable format
-- terraform.json        : Terraform plan in JSON format, required for some downstream CLI tooling
-- terraform.format      : List of files which have failed terraform format checks, else an empty file
-- checkov.xml           : JUnit output of Checkov results, can be used to upload test results downstream
-"""
+description: >-
+  Run quality checks against terraform, in addition to outputting a plan, with results outputted
+  to a pipeline artefact ZIP file with the name {{ inputs.prefix }}-terraform-artefact, contents
+  of which are as follows:
+  
+  - terraform.plan        : Binary terraform plan
+  - terraform.validate    : Results of terraform validation
+  - terraform.show        : Terraform plan in human-readable format
+  - terraform.json        : Terraform plan in JSON format, required for some downstream CLI tooling
+  - terraform.format      : List of files which have failed terraform format checks, else an empty file
+  - checkov.xml           : JUnit output of Checkov results, can be used to upload test results downstream
 author: "sudoblark"
 inputs:
   terraform_version:

@@ -1,9 +1,8 @@
 name: "sudoblark.github-actions.library/terraform/apply"
-description: """
-This template simply takes the artefact produced by the plan template and applies it.
-
-Intended to be used in conjunction with sudoblark.github-actions.library/terraform/plan.
-"""
+description: >-
+  This template simply takes the artefact produced by the plan template and applies it.
+  
+  Intended to be used in conjunction with sudoblark.github-actions.library/terraform/plan.
 author: "sudoblark"
 inputs:
   terraform_version:
