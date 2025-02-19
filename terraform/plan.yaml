@@ -49,7 +49,6 @@ outputs:
 jobs:
   terraform-quality-checks-and-plan:
     steps:
-
       - name: "Pull Hashicorp container"
         run: |
           docker pull hashicorp/terraform:${{ inputs.terraform_version }}

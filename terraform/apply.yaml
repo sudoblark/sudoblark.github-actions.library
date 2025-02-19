@@ -1,0 +1,80 @@
+name: "sudoblark.github-actions.library/terraform/apply"
+description: """
+This template simply takes the artefact produced by the plan template and applies it.
+
+Intended to be used in conjunction with sudoblark.github-actions.library/terraform/plan.
+"""
+author: "sudoblark"
+inputs:
+  terraform_version:
+    description: "Semantic version of Terraform to utilise for the task."
+    type: string
+    required: true
+  working_directory:
+    description: "The working directory to utilise when performing the task."
+    type: string
+    required: true
+  artefact:
+    description: "Name of the artefact - produced by teraform/plan - which we wish to apply"
+    type: string
+    required: true
+  aws_region:
+    description: "AWS_DEFAULT_REGION value, required if the hashicorp/aws provider is utilised."
+    type: string
+    default: ""
+    required: false
+  aws_access_key:
+    description: "AWS_ACCESS_KEY_ID value, required if the hashicorp/aws provider is utilised."
+    type: string
+    default: ""
+    required: false
+  aws_secret_access_key:
+    description: "AWS_SECRET_ACCESS_KEY value, required if the hashicorp/aws provider is utilised."
+    type: string
+    default: ""
+    required: false
+outputs:
+  artefact_name:
+    description: "Name of artefact ZIP file with outputted results."
+    type: string
+    value: "{{ inputs.prefix }}-terraform-artefact"
+
+jobs:
+  terraform-apply:
+    steps:
+      - name: "Pull Hashicorp container"
+        run: |
+          docker pull hashicorp/terraform:${{ inputs.terraform_version }}
+
+      - name: "Terraform init"
+        run: |
+          docker run \
+          -v $GITHUB_WORKSPACE:$GITHUB_WORKSPACE \
+          -w ${{ inputs.working_directory }}
+          -e AWS_ACCESS_KEY_ID=${{ inputs.aws_access_key }} \
+          -e AWS_SECRET_ACCESS_KEY=${{ inputs.aws_secret_access_key }} \
+          -e AWS_DEFAULT_REGION=${{ inputs.aws_region }} \
+          hashicorp/terraform:${{ inputs.terraform_version }} \
+          init
+
+      - uses: actions/download-artifact@v4
+        with:
+          name: ${{ inputs.artefact }}
+          path: ${{ inputs.working_directory }}/results.tar.gz
+
+      - name: "Restore artefact"
+        working-directory: ${{ inputs.working_directory }}
+        run: |
+          tar -xvpzf ${{ inputs.working_directory }}/results.tar.gz --same-owner
+          ls -alh ${{ inputs.working_directory }}
+
+      - name: "Terraform apply"
+        run: |
+          docker run \
+          -v $GITHUB_WORKSPACE:$GITHUB_WORKSPACE \
+          -w ${{ inputs.working_directory }}
+          -e AWS_ACCESS_KEY_ID=${{ inputs.aws_access_key }} \
+          -e AWS_SECRET_ACCESS_KEY=${{ inputs.aws_secret_access_key }} \
+          -e AWS_DEFAULT_REGION=${{ inputs.aws_region }} \
+          hashicorp/terraform:${{ inputs.terraform_version }} \
+          apply ${{ inputs.working_directory }}/terraform.plan
