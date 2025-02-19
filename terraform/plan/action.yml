@@ -143,10 +143,17 @@ runs:
       shell: bash
 
     - name: "Package results"
+      working-directory: ${{ inputs.working_directory }}
       run: |
-        cd ${{ inputs.working_directory }}
-        tar czvpf results.tar.gz terraform.plan terraform.validate terraform.show terraform.json terraform.format checkov.xml
+        # c = create new archive
+        # z = compress with gzip
+        # v = verbose output
+        # p = preserve permissions
+        # f = denotes file, i.e. write to results.tar.gz
+        tar -czvpf results.tar.gz terraform.plan terraform.validate terraform.show terraform.json terraform.format checkov.xml
+        pwd
         ls -lr
+
       shell: bash
 
     - uses: actions/upload-artifact@v4
