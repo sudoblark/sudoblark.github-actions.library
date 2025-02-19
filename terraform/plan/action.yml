@@ -142,16 +142,13 @@ runs:
         --soft-fail
       shell: bash
 
-    - name: "Package results"
-      run: |
-        cd ${{ inputs.working_directory }}
-        tar -czvpf results.tar.gz terraform.plan terraform.validate terraform.show terraform.json terraform.format checkov.xml
-        pwd
-        ls -lr
-
-      shell: bash
-
     - uses: actions/upload-artifact@v4
       with:
         name: "{{ inputs.prefix }}-terraform-artefact"
-        path: ${{ inputs.working_directory }}/results.tar.gz
+        path: |
+          ${{ inputs.working_directory }}/terraform.plan
+          ${{ inputs.working_directory }}/terraform.validate
+          ${{ inputs.working_directory }}/terraform.show
+          ${{ inputs.working_directory }}/terraform.json
+          ${{ inputs.working_directory }}/terraform.format
+          ${{ inputs.working_directory }}/checkov.xml
