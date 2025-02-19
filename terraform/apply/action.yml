@@ -44,6 +44,7 @@ runs:
     - name: "Pull Hashicorp container"
       run: |
         docker pull hashicorp/terraform:${{ inputs.terraform_version }}
+      shell: bash
 
     - name: "Terraform init"
       run: |
@@ -55,6 +56,7 @@ runs:
         -e AWS_DEFAULT_REGION=${{ inputs.aws_region }} \
         hashicorp/terraform:${{ inputs.terraform_version }} \
         init
+      shell: bash
 
     - uses: actions/download-artifact@v4
       with:
@@ -66,6 +68,7 @@ runs:
       run: |
         tar -xvpzf ${{ inputs.working_directory }}/results.tar.gz --same-owner
         ls -alh ${{ inputs.working_directory }}
+      shell: bash
 
     - name: "Terraform apply"
       run: |
@@ -77,3 +80,4 @@ runs:
         -e AWS_DEFAULT_REGION=${{ inputs.aws_region }} \
         hashicorp/terraform:${{ inputs.terraform_version }} \
         apply ${{ inputs.working_directory }}/terraform.plan
+      shell: bash
