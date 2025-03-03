@@ -51,10 +51,10 @@ jobs:
           git config user.name sudoblark-bot
           git config user.email enquires@sudoblark.com
           
-          poetry run mike deploy ${RELEASE_TAG_VERSION} --push
-          poetry run mike delete latest --push
-          poetry run mike alias ${RELEASE_TAG_VERSION} latest --push
-          poetry run mike set-default latest --push
+          mike deploy ${RELEASE_TAG_VERSION} --push
+          mike delete latest --push
+          mike alias ${RELEASE_TAG_VERSION} latest --push
+          mike set-default latest --push
         env:
           GITHUB_TOKEN: ${{ env.ORG_GITHUB_TOKEN }}
         shell: bash
