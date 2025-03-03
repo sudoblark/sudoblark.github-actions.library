@@ -1,0 +1,60 @@
+name: Release artefacts to the wild
+
+env:
+  # Automatically generated token unique to this repo per workflow execution
+  REPO_GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+  # Explicitly provided token in ORG to access entire organisation
+  ORG_GITHUB_TOKEN: ${{ secrets.SUDOBLARK_GITHUB_TOKEN }}
+
+on:
+  release:
+    types: [published]
+
+permissions:
+  contents: write
+
+jobs:
+  publish_docs_to_gh_pages:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+          fetch-tags: true
+
+        env:
+          GITHUB_TOKEN: ${{ env.REPO_GITHUB_TOKEN }}
+      - uses: actions/setup-python@v1
+        with:
+          python-version: 3.10.16
+      - name: Setup venv
+        run: |
+          python3 -m venv venv
+        shell: bash
+
+      - name: Grab release tag
+        run: |
+          export RELEASE_TAG_VERSION=${{ github.event.release.tag_name }}
+          echo "RELEASE_TAG_VERSION=${RELEASE_TAG_VERSION:1}" >> $GITHUB_ENV
+        shell: bash
+
+      - name: Install mkdocs
+        run: |
+          source venv/bin/activate
+          pip install -r mkdocs-requirements.txt
+        shell: bash
+
+      - name: Build and push
+        run: |
+          source venv/bin/activate
+          
+          git config user.name sudoblark-bot
+          git config user.email enquires@sudoblark.com
+          
+          mike deploy ${RELEASE_TAG_VERSION} --push
+          mike delete latest --push
+          mike alias ${RELEASE_TAG_VERSION} latest --push
+          mike set-default latest --push
+        env:
+          GITHUB_TOKEN: ${{ env.ORG_GITHUB_TOKEN }}
+        shell: bash

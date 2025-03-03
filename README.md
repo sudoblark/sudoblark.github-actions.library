@@ -22,7 +22,7 @@
     <li>
       <a href="#about-the-project">About The Project</a>
       <ul>
-        <li><a href="#built-with">Built With</a></li>
+        <li><a href="#technical-documentation">Technical Documentation</a></li>
       </ul>
     </li>
     <li><a href="#getting-started">Getting Started</a></li>
@@ -51,16 +51,28 @@ In the instance that several of these composite actions, when combined, fulfill 
 - Direct instantation in a caller repo
 - As a re-usable workflow via [sudoblark.github-actions.workflows](https://github.com/sudoblark/sudoblark.github-actions.workflows)
 
-<p align="right">(<a href="#readme-top">back to top</a>)</p>
-
-
-### Built With
-
-* [TODO](TODO)
+The live documentation base for this project is [here](https://sudoblark.github.io/sudoblark.github-actions.library/latest).
 
 <p align="right">(<a href="#readme-top">back to top</a>)</p>
 
 
+<!-- TECHNICAL DOCUMENTATION -->
+### Technical Documentation
+
+mkdocs is used in order to auto-generation documentation. It is configured via
+the [docs/mkdocs.yml](./docs/mkdocs.yml) file and - for the most part - doesn't
+need to be altered.
+
+In order to generation a local web server of documentation:
+
+```sh
+mkdocs serve
+```
+
+However, it should be noted that live versioned documentation is produced via
+the appropriate workflow as per the CI/CD section of this document.
+
+<p align="right">(<a href="#readme-top">back to top</a>)</p>
 
 <!-- GETTING STARTED -->
 ## Getting Started
@@ -90,56 +102,8 @@ the other benefits of a [component-based architecture](https://www.mendix.com/bl
 <!-- USAGE EXAMPLES -->
 ## Usage
 
-In order to use a task within a pipeline, simply:
-
-- Identify the actions(s) you wish to reference
-- Identify their interface
-  - i.e. what are the inputs and outputs
-- Figure out how this interacts with your intended use-case
-- Call those action(s) in your own pipeline, for example:
-
-```yaml
-on: [pull_request]
-
-jobs:
-  terraform_quality_checks:
-    runs-on: ubuntu-latest
-    name: A simple job to validate that pushed terraform is valid for all environment in the repo
-    strategy:
-      matrix:
-        ENVIRONMENTS: [
-          {
-            terraform_version: 1.5.1,
-            folder: dev,
-            prefix: dev,
-            aws_region: eu-west-2
-          },
-          {
-            terraform_version: 1.8.1,
-            folder: test,
-            prefix: test,
-            aws_region: eu-west-1
-          }
-          {
-            terraform_version: 1.10.1,
-            folder: prod,
-            prefix: prod,
-            aws_region: us-east-1
-          }
-        
-        ]
-    steps:
-      - uses: actions/checkout@v4
-      - uses: sudoblark/sudoblark.github-actions.library/terraform/plan@1.0.0
-        with:
-          terraform_version: ${{ matrix.ENVIRONMENTS.terraform_version }}
-          working_directory: infrastructure/${{ matrix.ENVIRONMENTS.folder }}
-          artefact_prefix: ${{ matrix.ENVIRONMENTS.prefix }}
-          aws_region: ${{ matrix.ENVIRONMENTS.aws_region }}
-          ## Assumed singular IAM role that can assume roles in other accounts
-          aws_access_key: ${{ secrets.ACCESS_KEY_ID }}
-          aws_secret_access_key: ${{ secrets.ACCESS_KEY_VALUE }}
-```
+See the live [docs](https://sudoblark.github.io/sudoblark.github-actions.library/latest)
+for more details on usage.
 
 <p align="right">(<a href="#readme-top">back to top</a>)</p>
 
