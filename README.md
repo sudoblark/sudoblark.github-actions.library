@@ -37,6 +37,11 @@
 
 <!-- ABOUT THE PROJECT -->
 ## About The Project
+[![CD](https://github.com/sudoblark/sudoblark.github-actions.library/actions/workflows/release.yaml/badge.svg)](https://github.com/sudoblark/sudoblark.github-actions.library/actions/workflows/release.yaml)
+[![Version](https://img.shields.io/github/v/release/sudoblark/sudoblark.github-actions.library?label=action%20library&sort=semver)](https://github.com/sudoblark/sudoblark.github-actions.library/releases)
+[![Docs](https://img.shields.io/badge/docs-latest-blue?logo=readthedocs)](https://sudoblark.github.io/sudoblark.github-actions.library/)
+[![License](https://img.shields.io/github/license/sudoblark/sudoblark.github-actions.library)](https://github.com/sudoblark/sudoblark.github-actions.library/blob/main/LICENSE.txt)
+
 
 This repo contains a setup of re-usable GitHub composition [actions](https://docs.github.com/en/actions/sharing-automations/creating-actions/creating-a-composite-action).
 
