@@ -29,7 +29,6 @@
     <li><a href="#usage">Usage</a></li>
     <li><a href="#contributing">Contributing</a></li>
     <li><a href="#license">License</a></li>
-    <li><a href="#acknowledgments">Acknowledgments</a></li>
   </ol>
 </details>
 
@@ -116,16 +115,7 @@ for more details on usage.
 <!-- CONTRIBUTING -->
 ## Contributing
 
-Contributions are what make the open source community such an amazing place to learn, inspire, and create. Any contributions you make are **greatly appreciated**.
-
-If you have a suggestion that would make this better, please fork the repo and create a pull request. You can also simply open an issue with the tag "enhancement".
-Don't forget to give the project a star! Thanks again!
-
-1. Fork the Project
-2. Create your Feature Branch (`git checkout -b feature/AmazingFeature`)
-3. Commit your Changes (`git commit -m 'Add some AmazingFeature'`)
-4. Push to the Branch (`git push origin feature/AmazingFeature`)
-5. Open a Pull Request
+Pull requests welcome. Fork the repository, create a feature branch, and submit a PR.
 
 <p align="right">(<a href="#readme-top">back to top</a>)</p>
 
@@ -133,15 +123,6 @@ Don't forget to give the project a star! Thanks again!
 <!-- LICENSE -->
 ## License
 
-Distributed under the project_license. See `LICENSE.txt` for more information.
-
-<p align="right">(<a href="#readme-top">back to top</a>)</p>
-
-
-<!-- ACKNOWLEDGMENTS -->
-## Acknowledgments
-
-* [Othneil Drew](https://github.com/othneildrew) for their amazing [Best README template](https://github.com/othneildrew/Best-README-Template) that was shameless used for this repo
-* [codeql-action](https://github.com/github/codeql-action) for a robust example of multiple actions in one repository, something that is lacking from the official [docs](https://docs.github.com/en/actions/sharing-automations/creating-actions/creating-a-composite-action).
+BSD 3-Clause License. See LICENSE.txt for details.
 
 <p align="right">(<a href="#readme-top">back to top</a>)</p>
